@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>How black are you</title>
+    <style>
+      :root {
+        --bg: #0057ff; /* azul parecido */
+        --track: #000; /* preto */
+        --knob: #4cff7a; /* verde claro */
+        --text: #ffffff;
+        --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        font-family: var(--font);
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .card {
+        width: 820px;
+        max-width: 94%;
+        text-align: center;
+        padding: 28px 24px 36px;
+        box-sizing: border-box;
+      }
+      h1 {
+        margin: 0 0 22px 0;
+        font-size: 30px;
+        font-weight: 600;
+        letter-spacing: 0.2px;
+      }
+
+      .slider-wrap {
+        position: relative;
+        margin: 10px auto 20px;
+        height: 34px;
+        width: 760px;
+        max-width: 100%;
+      }
+
+      /* visual track */
+      .track {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        height: 16px;
+        background: var(--track);
+        border-radius: 999px;
+        box-shadow: 0 2px 0 rgba(0, 0, 0, 0.25) inset;
+      }
+
+      /* knob */
+      .knob {
+        position: absolute;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 28px;
+        height: 28px;
+        background: var(--knob);
+        border-radius: 999px;
+        box-shadow: 0 6px 10px rgba(0, 0, 0, 0.25);
+        transition: left 0.08s linear;
+      }
+
+      /* hidden native range (for keyboard / mobile) */
+      input[type="range"] {
+        -webkit-appearance: none;
+        appearance: none;
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        background: transparent;
+        margin: 0;
+      }
+      input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: transparent;
+        cursor: pointer;
+      }
+
+      .labels {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 12px;
+        font-size: 14px;
+        opacity: 0.95;
+      }
+
+      /* small UI to change texts */
+      .controls {
+        margin-top: 22px;
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .controls input[type="text"] {
+        padding: 8px 10px;
+        border-radius: 8px;
+        border: none;
+        outline: none;
+        min-width: 200px;
+      }
+      .value-bubble {
+        margin-left: 8px;
+        font-weight: 700;
+        background: rgba(0, 0, 0, 0.15);
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 13px;
+      }
+
+      /* responsive tweaks */
+      @media (max-width: 420px) {
+        h1 {
+          font-size: 20px;
+        }
+        .controls input[type="text"] {
+          min-width: 140px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card" role="main" aria-label="Barômetro divertido">
+      <h1 id="title">How black are you?</h1>
+      <!-- você pode trocar este texto -->
+      <div class="slider-wrap" id="sliderWrap" aria-hidden="false">
+        <div class="track"></div>
+        <div class="knob" id="knob" style="left: 12%"></div>
+
+        <!-- range input (invisível) mas funcional -->
+        <input
+          id="range"
+          type="range"
+          min="0"
+          max="100"
+          value="12"
+          aria-label="Controle deslizante"
+        />
+      </div>
+
+      <div class="labels">
+        <div id="leftLabel">White</div>
+        <div id="rightLabel">I make rap songs</div>
+      </div>
+
+      <!-- controles para editar textos (para uso entre amigos) -->
+      <div class="controls" aria-hidden="false">
+        <div class="value-bubble" id="pctBubble">12%</div>
+      </div>
+    </div>
+
+    <script>
+      // elementos
+      const range = document.getElementById("range");
+      const knob = document.getElementById("knob");
+      const pctBubble = document.getElementById("pctBubble");
+      const titleEl = document.getElementById("title");
+      const titleInput = document.getElementById("titleInput");
+      const leftLabel = document.getElementById("leftLabel");
+      const rightLabel = document.getElementById("rightLabel");
+      const leftInput = document.getElementById("leftInput");
+      const rightInput = document.getElementById("rightInput");
+      const sliderWrap = document.getElementById("sliderWrap");
+
+      function updateKnobFromValue(v) {
+        // calcula a posição em pixels relativa ao track
+        const pct = Number(v); // 0..100
+        const wrapRect = sliderWrap.getBoundingClientRect();
+        const minPad = 0.03 * wrapRect.width; // evitar sair da pista
+        const pos = minPad + (wrapRect.width - minPad * 2) * (pct / 100);
+        knob.style.left = pos + "px"; // usa pixels para posicionamento preciso
+        pctBubble.textContent = Math.round(pct) + "%";
+      }
+
+      // inicialização
+      updateKnobFromValue(range.value);
+
+      // quando o usuário mexe no input range (arrastar)
+      range.addEventListener("input", (e) => {
+        updateKnobFromValue(e.target.value);
+      });
+
+      // permitir clicar na faixa para mover o knob
+      sliderWrap.addEventListener("click", (e) => {
+        const rect = sliderWrap.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const pct = Math.max(0, Math.min(100, (x / rect.width) * 100));
+        range.value = pct;
+        updateKnobFromValue(pct);
+      });
+
+      // atualiza textos ao digitar (live)
+      titleInput.addEventListener("input", (e) => {
+        const v = e.target.value.trim();
+        titleEl.textContent = v === "" ? "How black are you?" : v;
+      });
+      leftInput.addEventListener("input", (e) => {
+        leftLabel.textContent =
+          e.target.value.trim() === "" ? "White" : e.target.value;
+      });
+      rightInput.addEventListener("input", (e) => {
+        rightLabel.textContent =
+          e.target.value.trim() === "" ? "I make rap songs" : e.target.value;
+      });
+
+      // teclado para mover (acessibilidade)
+      range.addEventListener("keydown", (ev) => {
+        let step = 1;
+        if (ev.key === "ArrowLeft" || ev.key === "ArrowDown") {
+          range.value = Math.max(0, range.value - step);
+          updateKnobFromValue(range.value);
+        }
+        if (ev.key === "ArrowRight" || ev.key === "ArrowUp") {
+          range.value = Math.min(100, +range.value + step);
+          updateKnobFromValue(range.value);
+        }
+      });
+
+      // ajusta posição quando a janela redimensiona
+      window.addEventListener("resize", () => updateKnobFromValue(range.value));
+    </script>
+  </body>
+</html>
